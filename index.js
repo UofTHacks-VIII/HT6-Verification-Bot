@@ -141,7 +141,7 @@ function registerMember(email, discordTag, discordID){
 
     // update the sheet
     sheets.spreadsheets.values.update({
-      spreadsheetId: '1f-FmODoCMisa5dPWiFoypbg_h4Kdcb95PD3EzkSlaH8',
+      spreadsheetId: process.env.DATA_SHEET_ID,
       range: 'Discord!B' + spreadRow + ':C'+spreadRow,
       valueInputOption: 'RAW',
       resource: {
