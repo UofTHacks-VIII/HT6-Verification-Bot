@@ -216,7 +216,7 @@ bot.on('message', message => {
           message.member.setNickname(applicationData[email].fullname)
           .catch((e) => {
             console.log(e);
-            return respond(message, "There was an error updating your name. To encourage transparency and make it easier for us to help you, please manually set your nickname to your full name.");
+            return respond(message, "There was an error updating your name. Please message a MasseyHacks team member to have it set manually.");
 
           }).finally(() => {
             registerMember(email, message.author.tag, message.author.id).then(() => {
