@@ -54,11 +54,8 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-data/.env
-
 # next.js build output
 .next
 
 # credentials and tokens
-data/
+src/data/
