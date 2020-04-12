@@ -58,4 +58,6 @@ typings/
 .next
 
 # credentials and tokens
-src/data/
+src/data/.env
+src/data/credentials.json
+src/data/token.json
