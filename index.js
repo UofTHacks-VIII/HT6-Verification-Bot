@@ -83,7 +83,7 @@ function getHackerInfo() {
     // first get the usernames
     sheets.spreadsheets.values.get({
       spreadsheetId: process.env.DATA_SHEET_ID,
-      range: 'Form Responses 1!B2:B',
+      range: 'Form Responses 1!B2:D',
     }, (err, res) => {
       if (err) return reject('The API returned an error: ' + err);
 
@@ -97,6 +97,7 @@ function getHackerInfo() {
           let row = rows[i];
           applicationData[row[0].toLowerCase()] = {
             row: i+1,
+            fullname: row[1] + " " + row[2]
           }
         }
 
@@ -205,11 +206,19 @@ bot.on('message', message => {
     if(!applicationData[email].discord_tag && !applicationData[email].discord_id){
       // good email, try to add the role now
       message.member.addRole(process.env.HACKER_ROLE_ID).then(() => {
-        registerMember(email, message.author.tag, message.author.id).then(() => {
-          return respond(message, "Successfully verified!");
-        }).catch((e) => {
-          return respond(message, "Successfully verified! However, there was an error updating our database. Please contact a team member, otherwise you will not be eligible for prizes and swag.");
-        });
+          message.member.setNickname(applicationData[email].fullname).then(() => {})
+          .catch((e) => {
+            return respond(message, "Successfully verified! However, there was an error updating your name. To encourage transparency and make it easier for us to help you, please manually set your nickname to your full name.");
+
+          }).finally(() => {
+            registerMember(email, message.author.tag, message.author.id).then(() => {
+              return respond(message, "Successfully verified!");
+
+            }).catch((e) => {
+              return respond(message, "Successfully verified! However, there was an error updating our database. Please contact a team member, otherwise you will not be eligible for prizes and swag.");
+            });
+          });
+
 
       }).catch((e) => {
         console.log(e);
