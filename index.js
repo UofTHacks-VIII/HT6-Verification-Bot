@@ -190,6 +190,13 @@ bot.on('ready', () => {
 });
 
 bot.on('message', message => {
+  if(message.author.id === bot.user.id){
+    return;
+  }
+  if(message.channel.type !== "text"){
+    return message.author.send('Please enter your command in the #verification channel!')
+  }
+
   if (message.content.startsWith('!verify')) {
     const args = message.content.slice('!verify '.length).split(' ');
 
@@ -206,9 +213,10 @@ bot.on('message', message => {
     if(!applicationData[email].discord_tag && !applicationData[email].discord_id){
       // good email, try to add the role now
       message.member.addRole(process.env.HACKER_ROLE_ID).then(() => {
-          message.member.setNickname(applicationData[email].fullname).then(() => {})
+          message.member.setNickname(applicationData[email].fullname)
           .catch((e) => {
-            return respond(message, "Successfully verified! However, there was an error updating your name. To encourage transparency and make it easier for us to help you, please manually set your nickname to your full name.");
+            console.log(e);
+            return respond(message, "There was an error updating your name. To encourage transparency and make it easier for us to help you, please manually set your nickname to your full name.");
 
           }).finally(() => {
             registerMember(email, message.author.tag, message.author.id).then(() => {
