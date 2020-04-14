@@ -9,4 +9,4 @@ Requires `credentials.json` and `token.json` in the `data` directory for Google 
 
 Requires `.env` (also in the data directory) for all other configuration. Use `.env.template` as a guide.
 
-If you are running the Docker image, you will need to generate `token.json` first, then mount all three files to `/home/node/app/data` as the container will not have permission to write to the `data` directory and you probably don't want to build an image with those files included.
+If you are running the Docker image, you will need to generate `token.json` first, then mount all three files in a directory to `/home/node/app/data` as the container will not have permission to write to the `data` directory and you probably don't want to build an image with those files included.
