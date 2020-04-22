@@ -3,6 +3,9 @@ require('dotenv').config({path: path.resolve(process.cwd(),'data','.env')});
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 
+const mysql = require('mysql');
+const { v4: uuidv4 } = require('uuid');
+
 const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
@@ -33,6 +36,25 @@ function applyAuth(auth) {
    sheets = google.sheets({version: 'v4', auth});
    getHackerInfo();
 }
+
+// connect to mysql database for currency
+const con = mysql.createConnection({
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DB
+});
+
+con.connect(function(err){
+  if (err) throw err;
+  console.log("Connected to MySQL database!");
+
+  let sql = "CREATE TABLE IF NOT EXISTS EventEconomy (discordID VARCHAR(20), balance DECIMAL(20,2), PRIMARY KEY (`discordID`))";
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    console.log("Database initialized!");
+  });
+});
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -166,6 +188,16 @@ function registerMember(email, discordTag, discordID){
   })
 }
 
+function setupEconomyAccount(discordID){
+  return new Promise(function(resolve, reject){
+    // set up economy
+    con.query("INSERT INTO EventEconomy (discordID, balance) VALUES ('"+ discordID +"',0)", function(err, result){
+      if (err) return reject(err);
+      return resolve();
+    })
+  })
+}
+
 function respond(message, reply){
   // if message was sent in the bot testing channel, don't delete the command message and reply in the channel
   if(message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID){
@@ -210,6 +242,14 @@ bot.on('message', message => {
       return respond(message, "No such email in our database!")
     }
 
+    for (let email in applicationData) {
+      if (applicationData.hasOwnProperty(email)) {
+        if(applicationData[email].discord_id === message.author.id){
+          return respond(message, "This Discord user is already associated with an email!");
+        }
+      }
+    }
+
     // check if email has already been used before
     if(!applicationData[email].discord_tag && !applicationData[email].discord_id){
       // good email, try to add the role now
@@ -217,14 +257,22 @@ bot.on('message', message => {
           message.member.setNickname(applicationData[email].fullname)
           .catch((e) => {
             console.log(e);
-            return respond(message, "There was an error updating your name. Please message a MasseyHacks team member to have it set manually.");
+            respond(message, "There was an error updating your name. Please message a MasseyHacks team member to have it set manually.");
 
           }).finally(() => {
-            registerMember(email, message.author.tag, message.author.id).then(() => {
-              return respond(message, "Successfully verified!");
+            registerMember(email, message.author.tag, message.author.id).catch((e) => {
 
-            }).catch((e) => {
-              return respond(message, "Successfully verified! However, there was an error updating our database. Please contact a team member, otherwise you will not be eligible for prizes and swag.");
+              respond(message, "There was an error updating our database. Please contact a team member, otherwise you will not be eligible for prizes and swag.");
+
+            }).finally(() => {
+
+              setupEconomyAccount(message.author.id).then(() => {
+                return respond(message, "Successfully verified!");
+              }).catch((e) => {
+                console.log(e);
+                return respond(message, "Successfully verified! However, there was an error setting up your economy account. Please contact a team member, otherwise you will not be able to earn points during the event.")
+              })
+
             });
           });
 
@@ -255,5 +303,33 @@ bot.on('message', message => {
       let buffer = Buffer.from(JSON.stringify(applicationData), "utf-8");
       return respond(message, {files: [{name: 'userInfoCache_'+Date.now()+'.json', attachment: buffer}]})
     }
+  }
+  else if(message.content.startsWith('!linkmc')){
+    con.query(`SELECT secret, mcUUID FROM MinecraftDiscordLink WHERE discordID='${message.author.id}'`, function(err, result){
+      if (err) return respond(message, "Error contacting the database!");
+
+      //console.log(result);
+      if(result.length < 1){
+        let newSecret = uuidv4();
+        con.query(`INSERT INTO MinecraftDiscordLink (discordID, discordTag, secret) VALUES ('${message.author.id}', '${message.author.tag}', '${newSecret}')`, function(err2, result2){
+          if(err2) return respond(message, "Error registering secret!");
+
+          return respond(message, "Discord link process started. Log in to the Minecraft server and issue the following command: `/linkdiscord " + newSecret + "`");
+        })
+      }
+      else if(result[0].mcUUID){
+        return respond(message, "Your account has already been linked to a Minecraft user with UUID " + result[0].mcUUID);
+      }
+      else {
+        return respond(message, "Discord link process started. Log in to the Minecraft server and issue the following command: `/linkdiscord " + result[0].secret + "`");
+      }
+    })
+  }
+  else if(message.content.startsWith('!balance')){
+    con.query("SELECT balance from EventEconomy WHERE discordID='" + message.author.id + "'", function(err, result){
+      if (err || result.length < 1) return respond("Unable to retrieve your balance!");
+      return respond(message, "Your current balance: " + result[0].balance);
+    });
+
   }
 });
