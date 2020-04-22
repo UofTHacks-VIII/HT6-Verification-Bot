@@ -12,6 +12,8 @@
   "dependencies": {
     "discord.js": "^11.6.4",
     "dotenv": "^8.2.0",
-    "googleapis": "^39.2.0"
+    "googleapis": "^39.2.0",
+    "mysql": "^2.18.1",
+    "uuid": "^7.0.3"
   }
 }
