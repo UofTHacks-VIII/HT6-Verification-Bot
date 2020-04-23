@@ -325,11 +325,25 @@ bot.on('message', message => {
       }
     })
   }
+  else if(message.content.startsWith('!unlinkmc')){
+    const args = message.content.slice('!unlinkmc '.length).split(' ');
+    //console.log(args);
+    if(args.length === 0 || args[0].length === 0){
+      return respond(message, "You are about to unlink your Discord user from your Minecraft account. You will lose access to all in-game currency that has not very been transferred until you re-link your account. If you would like to continue, run `!unlinkmc confirm` to confirm this action.")
+    }
+    else if(args.length === 1 && args[0].toLowerCase() === "confirm"){
+      con.query(`UPDATE MinecraftDiscordLink SET mcUUID=NULL WHERE discordID='${message.author.id}'`, function(err, result){
+        if (err) return respond(message, "Unable to update the database.");
+
+        return respond(message, "Successfully unlinked your accounts.")
+      });
+    }
+
+  }
   else if(message.content.startsWith('!balance')){
     con.query("SELECT balance from EventEconomy WHERE discordID='" + message.author.id + "'", function(err, result){
       if (err || result.length < 1) return respond("Unable to retrieve your balance!");
       return respond(message, "Your current balance: " + result[0].balance);
     });
-
   }
 });
