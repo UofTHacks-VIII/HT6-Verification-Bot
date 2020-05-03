@@ -38,22 +38,39 @@ function applyAuth(auth) {
 }
 
 // connect to mysql database for currency
-const con = mysql.createConnection({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DB
-});
+// const con = mysql.createConnection({
+//   host: process.env.MYSQL_HOST,
+//   user: process.env.MYSQL_USER,
+//   password: process.env.MYSQL_PASSWORD,
+//   database: process.env.MYSQL_DB
+// });
 
-con.connect(function(err){
-  if (err) throw err;
+let pool = mysql.createPool({
+   host: process.env.MYSQL_HOST,
+   user: process.env.MYSQL_USER,
+   password: process.env.MYSQL_PASSWORD,
+   database: process.env.MYSQL_DB,
+   connectionLimit: process.env.MYSQL_MAX_CONNECTIONS || 5
+})
+
+// con.connect(function(err){
+//   if (err) throw err;
+//   console.log("Connected to MySQL database!");
+//
+//   let sql = "CREATE TABLE IF NOT EXISTS EventEconomy (discordID VARCHAR(20), balance DECIMAL(20,2), PRIMARY KEY (`discordID`))";
+//   con.query(sql, function (err, result) {
+//     if (err) throw err;
+//     console.log("Database initialized!");
+//   });
+// });
+
+pool.on('acquire', function(connection){
   console.log("Connected to MySQL database!");
+})
 
-  let sql = "CREATE TABLE IF NOT EXISTS EventEconomy (discordID VARCHAR(20), balance DECIMAL(20,2), PRIMARY KEY (`discordID`))";
-  con.query(sql, function (err, result) {
-    if (err) throw err;
-    console.log("Database initialized!");
-  });
+pool.query("CREATE TABLE IF NOT EXISTS EventEconomy (discordID VARCHAR(20), balance DECIMAL(20,2), PRIMARY KEY (`discordID`))", function (err, result) {
+  if (err) throw err;
+  console.log("Database initialized!");
 });
 
 /**
@@ -191,7 +208,7 @@ function registerMember(email, discordTag, discordID){
 function setupEconomyAccount(discordID){
   return new Promise(function(resolve, reject){
     // set up economy
-    con.query("INSERT INTO EventEconomy (discordID, balance) VALUES ('"+ discordID +"',0)", function(err, result){
+    pool.query("INSERT INTO EventEconomy (discordID, balance) VALUES ('"+ discordID +"',0)", function(err, result){
       if (err) return reject(err);
       return resolve();
     })
@@ -305,25 +322,37 @@ bot.on('message', message => {
     }
   }
   else if(message.content.startsWith('!linkmc')){
-    con.query(`SELECT secret, mcUUID FROM MinecraftDiscordLink WHERE discordID='${message.author.id}'`, function(err, result){
-      if (err) return respond(message, "Error contacting the database!");
+    pool.getConnection(function (err, con) {
+      con.query(`SELECT secret, mcUUID FROM MinecraftDiscordLink WHERE discordID='${message.author.id}'`, function(err, result){
+        if (err){
+          con.release();
+          return respond(message, "Error contacting the database!");
+        }
 
-      //console.log(result);
-      if(result.length < 1){
-        let newSecret = uuidv4();
-        con.query(`INSERT INTO MinecraftDiscordLink (discordID, discordTag, secret) VALUES ('${message.author.id}', '${message.author.tag}', '${newSecret}')`, function(err2, result2){
-          if(err2) return respond(message, "Error registering secret!");
+        //console.log(result);
+        if(result.length < 1){
+          let newSecret = uuidv4();
+          con.query(`INSERT INTO MinecraftDiscordLink (discordID, discordTag, secret) VALUES ('${message.author.id}', '${message.author.tag}', '${newSecret}')`, function(err2, result2){
+            if(err2){
+              con.release();
+              return respond(message, "Error registering secret!");
+            }
 
-          return respond(message, "Discord link process started. Log in to the Minecraft server and issue the following command: `/linkdiscord " + newSecret + "`");
-        })
-      }
-      else if(result[0].mcUUID){
-        return respond(message, "Your account has already been linked to a Minecraft user with UUID " + result[0].mcUUID);
-      }
-      else {
-        return respond(message, "Discord link process started. Log in to the Minecraft server and issue the following command: `/linkdiscord " + result[0].secret + "`");
-      }
+            con.release();
+            return respond(message, "Discord link process started. Log in to the Minecraft server and issue the following command: `/linkdiscord " + newSecret + "`");
+          });
+        }
+        else if(result[0].mcUUID){
+          con.release();
+          return respond(message, "Your account has already been linked to a Minecraft user with UUID " + result[0].mcUUID);
+        }
+        else {
+          con.release();
+          return respond(message, "Discord link process started. Log in to the Minecraft server and issue the following command: `/linkdiscord " + result[0].secret + "`");
+        }
+      })
     })
+
   }
   else if(message.content.startsWith('!unlinkmc')){
     const args = message.content.slice('!unlinkmc '.length).split(' ');
@@ -332,7 +361,7 @@ bot.on('message', message => {
       return respond(message, "You are about to unlink your Discord user from your Minecraft account. You will lose access to all in-game currency that has not very been transferred until you re-link your account. If you would like to continue, run `!unlinkmc confirm` to confirm this action.")
     }
     else if(args.length === 1 && args[0].toLowerCase() === "confirm"){
-      con.query(`UPDATE MinecraftDiscordLink SET mcUUID=NULL WHERE discordID='${message.author.id}'`, function(err, result){
+      pool.query(`UPDATE MinecraftDiscordLink SET mcUUID=NULL WHERE discordID='${message.author.id}'`, function(err, result){
         if (err) return respond(message, "Unable to update the database.");
 
         return respond(message, "Successfully unlinked your accounts.")
@@ -342,14 +371,14 @@ bot.on('message', message => {
   }
   else if(message.content.startsWith('!linkstatus'))
   {
-    con.query("SELECT mcUUID FROM MinecraftDiscordLink WHERE discordID='"+ message.author.id +"' AND mcUUID IS NOT NULL", function(err, result){
+    pool.query("SELECT mcUUID FROM MinecraftDiscordLink WHERE discordID='"+ message.author.id +"' AND mcUUID IS NOT NULL", function(err, result){
       if (err) return respond(message, "Unable to retrieve link status!");
       if(result.length < 1) return respond(message, "Your account is not linked to a Minecraft player.")
       return respond(message, "Currently linked to player with UUID " + result[0].mcUUID);
     });
   }
   else if(message.content.startsWith('!balance')){
-    con.query("SELECT balance from EventEconomy WHERE discordID='" + message.author.id + "'", function(err, result){
+    pool.query("SELECT balance from EventEconomy WHERE discordID='" + message.author.id + "'", function(err, result){
       if (err || result.length < 1) return respond("Unable to retrieve your balance!");
       return respond(message, "Your current balance: " + result[0].balance);
     });
