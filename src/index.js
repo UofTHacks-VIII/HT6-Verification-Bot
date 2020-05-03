@@ -340,6 +340,14 @@ bot.on('message', message => {
     }
 
   }
+  else if(message.content.startsWith('!linkstatus'))
+  {
+    con.query("SELECT mcUUID FROM MinecraftDiscordLink WHERE discordID='"+ message.author.id +"' AND mcUUID IS NOT NULL", function(err, result){
+      if (err) return respond(message, "Unable to retrieve link status!");
+      if(result.length < 1) return respond(message, "Your account is not linked to a Minecraft player.")
+      return respond(message, "Currently linked to player with UUID " + result[0].mcUUID);
+    });
+  }
   else if(message.content.startsWith('!balance')){
     con.query("SELECT balance from EventEconomy WHERE discordID='" + message.author.id + "'", function(err, result){
       if (err || result.length < 1) return respond("Unable to retrieve your balance!");
