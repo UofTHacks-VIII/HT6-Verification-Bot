@@ -243,11 +243,12 @@ bot.on('message', message => {
   if(message.author.id === bot.user.id){
     return;
   }
-  if(message.channel.type !== "text"){
-    return message.author.send('Please enter your command in the #verification channel!')
-  }
 
   if (message.content.startsWith('!verify')) {
+    if(message.channel.type !== "text"){
+      return message.author.send('Please enter your command in the #verification channel!')
+    }
+
     const args = message.content.slice('!verify '.length).split(' ');
 
     if (!args.length || !args[0].length) {
