@@ -307,7 +307,7 @@ bot.on('message', message => {
   else if(message.content.startsWith('!help')){
     return respond(message, 'Welcome to the MasseyHacks Discord!\n\n' +
         'Use `!verify <email>` (do not include the < and > symbols) to gain access to this server.\n\n'+
-        'For any questions or concerns, message a member of the MasseyHacks team or shoot us an email a hello@masseyhacks.ca.\n\n' +
+        'For any questions or concerns, message a member of the MasseyHacks team or shoot us an email at hello@masseyhacks.ca.\n\n' +
         'Additional commands:\n\n' +
         '`!linkmc` - Link your Minecraft account to your Discord account\n' +
         '`!unlinkmc` - Unlink your Minecraft account from your Discord account\n' +
