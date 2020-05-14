@@ -391,7 +391,7 @@ bot.on('message', message => {
       return respond(message, "Your current balance: " + result[0].balance);
     });
   }
-  else if(!message.member.roles.has(process.env.ADMIN_ROLE_ID) && message.channel.id === process.env.VERIFY_CHANNEL_ID){
+  else if(message.channel.id === process.env.VERIFY_CHANNEL_ID && !message.member.roles.has(process.env.ADMIN_ROLE_ID)){
     message.delete();
   }
 });
