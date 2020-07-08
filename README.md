@@ -1,7 +1,8 @@
-# MasseyHacks Verification Bot
-![MasseyHacks Verification Bot - Build and Publish to Docker](https://github.com/MasseyHacks/MasseyHacks-Verification-Bot/workflows/MasseyHacks%20Verification%20Bot%20-%20Build%20and%20Publish%20to%20Docker/badge.svg)
+# Hack the 6ix verification bot
 
-A Discord verification bot that uses emails from a Google Sheet to verify users on a Discord server. Tracks emails that have already been used to verify a user. Also integrates with the MasseyHacks VI Activities points system.
+A Discord verification bot that reads from a mongoDB database and verifies users on a Discord server. Tracks attendance and assigns nicknames and roles from the database.
+
+Fork of the MasseyHacks-Verification-Bot.
 
 Licensed under MIT.
 

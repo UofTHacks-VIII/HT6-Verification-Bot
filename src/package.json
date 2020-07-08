@@ -1,18 +1,17 @@
 {
   "name": "masseyhacks-verification-bot",
   "version": "1.0.0",
-  "description": "Discord verification bot for MasseyHacks",
+  "description": "Discord verification bot for Hack the 6ix",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "David Hui",
+  "author": "David Hui & Henry Tu",
   "license": "MIT",
   "dependencies": {
     "discord.js": "^11.6.4",
     "dotenv": "^8.2.0",
-    "mysql": "^2.18.1",
     "uuid": "^7.0.3"
   }
 }
