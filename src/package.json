@@ -10,8 +10,9 @@
   "author": "David Hui & Henry Tu",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^11.6.4",
+    "discord.js": "^12.2.0",
     "dotenv": "^8.2.0",
+    "mongoose": "^5.9.22",
     "uuid": "^7.0.3"
   }
 }
