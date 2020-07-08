@@ -163,6 +163,6 @@ bot.on('message', message => {
   } else if (message.channel.id === process.env.VERIFY_CHANNEL_ID
       && !message.member.roles.cache.some(
           r => r.id === process.env.ADMIN_ROLE_ID)) {
-    message.delete();
+    return respond(message, 'That command is invalid! Run `!help` for verification instructions. Please contact a team member if you run into any problems!');
   }
 });
