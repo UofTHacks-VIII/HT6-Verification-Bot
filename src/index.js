@@ -1,5 +1,5 @@
 const path = require('path');
-require('dotenv').config({path: path.resolve(process.cwd(),'data','.env')});
+require('dotenv').config({path: path.resolve(process.cwd(), 'data', '.env')});
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 const fs = require('fs');
@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 
 const TOKEN = process.env.TOKEN;
 
-if (mongoose.connect(process.env.DB_CONN, { useNewUrlParser: true })) {
+if (mongoose.connect(process.env.DB_CONN, {useNewUrlParser: true})) {
   console.log("DB Connected")
 }
 
@@ -34,16 +34,15 @@ const getRoleID = (roleName) => {
   }
 
   return roles[roleName]
-}
+};
 
 const respond = (message, reply) => {
   // if message was sent in the bot testing channel, don't delete the command message and reply in the channel
-  if(message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID){
+  if (message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID) {
     // public channel, delete the command message and reply in private message
     message.author.send(reply);
     return message.delete();
-  }
-  else{
+  } else {
     return message.channel.send(reply)
   }
 };
@@ -62,25 +61,26 @@ bot.on('ready', () => {
 
 bot.on('message', message => {
   // Don't respond to yourself! (That's sad)
-  if(message.author.id === bot.user.id){
+  if (message.author.id === bot.user.id) {
     return;
   }
 
   if (message.content.startsWith('!roles') && isAdmin(message)) {
     return respond(message, JSON.stringify(roles, null, 4));
   } else if (message.content.startsWith('!verify')) {
-    if(message.channel.type !== "text"){
-      return message.author.send('Please enter your command in the #verification channel!');
+    if (message.channel.type !== "text") {
+      return message.author.send(
+          'Please enter your command in the #verification channel!');
     }
 
-    if(message.channel.id !== process.env.VERIFY_CHANNEL_ID){
+    if (message.channel.id !== process.env.VERIFY_CHANNEL_ID) {
       return respond('Please enter your command in the #verification channel!');
     }
 
     const args = message.content.slice('!verify '.length).split(' ');
 
     if (!args.length || !args[0].length) {
-      return respond(message,`Please provide your email!`)
+      return respond(message, `Please provide your email!`)
     }
 
     let email = args[0].toLowerCase();
@@ -89,21 +89,27 @@ bot.on('message', message => {
       discordID: message.author.id
     }, (err, user) => {
       if (err) {
-        respond(message, "Unable to determine verification status! Please message a team member for assistance.");
+        respond(message,
+            "Unable to determine verification status! Please message a team member for assistance.");
       }
 
       if (user) {
-        return respond(message, `Your Discord user is already associated with an email. If you believe this is an error, please contact a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}.`);
+        return respond(message,
+            `Your Discord user is already associated with an email. If you believe this is an error, please contact a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}.`);
       } else {
 
         DiscordEntry.findOne({
           email: email,
           discordID: null
         }, (err, user) => {
-          if(err) return respond(message, "Unable to query unassociated emails! Please message a team member for assistance.");
+          if (err) {
+            return respond(message,
+                "Unable to query unassociated emails! Please message a team member for assistance.");
+          }
 
           if (!user) {
-            return respond(message, "The email you specified either does not exist in our database or has already been associated with a Discord user. Please check the information you provided or contact a team member for assistance.");
+            return respond(message,
+                "The email you specified either does not exist in our database or has already been associated with a Discord user. Please check the information you provided or contact a team member for assistance.");
           } else {
 
             let rolePromises = [];
@@ -117,7 +123,8 @@ bot.on('message', message => {
               message.member.setNickname(user.displayName)
               .catch((e) => {
                 console.log(e);
-                respond(message, `There was an error updating your name. Please message a ${process.env.EVENT_NAME} team member to have it set manually.`);
+                respond(message,
+                    `There was an error updating your name. Please message a ${process.env.EVENT_NAME} team member to have it set manually.`);
 
               }).finally(() => {
                 DiscordEntry.findOneAndUpdate({
@@ -130,27 +137,32 @@ bot.on('message', message => {
                   }
                 }, (err, user) => {
                   if (err) {
-                    return respond(message, "There was an error updating our database. Please contact a team member.");
+                    return respond(message,
+                        "There was an error updating our database. Please contact a team member.");
                   }
 
-                  return respond(message, "Your account has been successfully verified! If you have any questions, feel free to contact a team member.");
+                  return respond(message,
+                      "Your account has been successfully verified! If you have any questions, feel free to contact a team member.");
                 });
               });
             })
             .catch((e) => {
-              return respond(message,`Error adding your role! Please contact a ${process.env.EVENT_NAME} team member for assistance.`)
+              return respond(message,
+                  `Error adding your role! Please contact a ${process.env.EVENT_NAME} team member for assistance.`)
             });
           }
         });
       }
     });
-  }
-  else if(message.content.startsWith('!help')){
-    return respond(message, `Welcome to the ${process.env.EVENT_NAME} Discord!\n\n` +
-        'Use `!verify <email>` (do not include the < and > symbols) with the email you used to register to gain access to this server.\n\n'+
+  } else if (message.content.startsWith('!help')) {
+    return respond(message,
+        `Welcome to the ${process.env.EVENT_NAME} Discord!\n\n` +
+        'Use `!verify <email>` (do not include the < and > symbols) with the email you used to register to gain access to this server.\n\n'
+        +
         `For any questions or concerns, message a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}.\n\n`);
-  }
-  else if(message.channel.id === process.env.VERIFY_CHANNEL_ID && !message.member.roles.cache.some(r => r.id === process.env.ADMIN_ROLE_ID)){
+  } else if (message.channel.id === process.env.VERIFY_CHANNEL_ID
+      && !message.member.roles.cache.some(
+          r => r.id === process.env.ADMIN_ROLE_ID)) {
     message.delete();
   }
 });
