@@ -28,31 +28,7 @@ const roles = JSON.parse(fs.readFileSync('data/roles.json'));
 
 console.log('Loaded roles:', roles);
 
-// Recursively add roles
-// idk if there is a better way to do this lol
-function addRole(message, remainingRoles, callback) {
-  if (remainingRoles.length > 0) {
-    const currentRole = remainingRoles[0];
-    remainingRoles.splice(0, 1);
-
-    const roleID = getRoleID(currentRole);
-
-    if (!roleID) {
-      return callback({error: 'Role not found!'});
-    }
-
-    message.member.roles.add(roleID).then(() => {
-      addRole(message, remainingRoles, callback);
-    }).catch((e) => {
-      console.log(e);
-      return callback({error: e});
-    })
-  } else {
-    return callback(null, true);
-  }
-}
-
-function getRoleID(roleName) {
+const getRoleID = (roleName) => {
   if (!roles[roleName]) {
     console.log(`Role ${roleName} was not found!`);
   }
@@ -60,18 +36,17 @@ function getRoleID(roleName) {
   return roles[roleName]
 }
 
-function respond(message, reply){
+const respond = (message, reply) => {
   // if message was sent in the bot testing channel, don't delete the command message and reply in the channel
   if(message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID){
     // public channel, delete the command message and reply in private message
-
     message.author.send(reply);
     return message.delete();
   }
   else{
     return message.channel.send(reply)
   }
-}
+};
 
 bot.on('ready', () => {
   console.info(`Logged in as ${bot.user.tag}!`);
@@ -112,7 +87,7 @@ bot.on('message', message => {
 
     DiscordEntry.findOne({
       discordID: message.author.id
-    }, function (err, user) {
+    }, (err, user) => {
       if (err) {
         respond(message, "Unable to determine verification status! Please message a team member for assistance.");
       }
@@ -124,35 +99,36 @@ bot.on('message', message => {
         DiscordEntry.findOne({
           email: email,
           discordID: null
-        }, function (err, user) {
+        }, (err, user) => {
           if(err) return respond(message, "Unable to query unassociated emails! Please message a team member for assistance.");
-
-          console.log('MEMBER', message.member);
 
           if (!user) {
             return respond(message, "The email you specified either does not exist in our database or has already been associated with a Discord user. Please check the information you provided or contact a team member for assistance.");
           } else {
 
-            addRole(message, user.roles, function (err, msg) {
-              if (err) {
-                return respond(message,`Error adding your role! Please contact a ${process.env.EVENT_NAME} team member for assistance.`);
-              }
+            let rolePromises = [];
 
+            user.roles.forEach((role) => {
+              rolePromises.push(message.member.roles.add(getRoleID(role)));
+            });
+
+            Promise.all(rolePromises)
+            .then((err, msg) => {
               message.member.setNickname(user.displayName)
               .catch((e) => {
                 console.log(e);
                 respond(message, `There was an error updating your name. Please message a ${process.env.EVENT_NAME} team member to have it set manually.`);
 
               }).finally(() => {
-
                 DiscordEntry.findOneAndUpdate({
                   email: email
                 }, {
                   $set: {
                     discordTag: message.author.tag,
-                    discordID: message.author.id
+                    discordID: message.author.id,
+                    timeOfCheckin: new Date()
                   }
-                }, function (err, user) {
+                }, (err, user) => {
                   if (err) {
                     return respond(message, "There was an error updating our database. Please contact a team member.");
                   }
@@ -160,6 +136,9 @@ bot.on('message', message => {
                   return respond(message, "Your account has been successfully verified! If you have any questions, feel free to contact a team member.");
                 });
               });
+            })
+            .catch((e) => {
+              return respond(message,`Error adding your role! Please contact a ${process.env.EVENT_NAME} team member for assistance.`)
             });
           }
         });
@@ -171,7 +150,7 @@ bot.on('message', message => {
         'Use `!verify <email>` (do not include the < and > symbols) with the email you used to register to gain access to this server.\n\n'+
         `For any questions or concerns, message a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}.\n\n`);
   }
-  else if(message.channel.id === process.env.VERIFY_CHANNEL_ID){
+  else if(message.channel.id === process.env.VERIFY_CHANNEL_ID && !message.member.roles.cache.some(r => r.id === process.env.ADMIN_ROLE_ID)){
     message.delete();
   }
 });
