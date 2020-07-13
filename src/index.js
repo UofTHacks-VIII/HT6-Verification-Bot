@@ -85,6 +85,8 @@ bot.on('message', message => {
 
     let email = args[0].toLowerCase();
 
+    console.log(`[${new Date()}]Verification request: ${email}, ${message.author.tag}`);
+
     DiscordEntry.findOne({
       discordID: message.author.id
     }, (err, user) => {
