@@ -12,7 +12,7 @@ if (mongoose.connect(process.env.DB_CONN, {useNewUrlParser: true})) {
 }
 
 const discordSchema = new mongoose.Schema({
-  email: String, // String is shorthand for {type: String}
+  email: { type: String, required: true, unique: true },
   discordID: String,
   discordTag: String,
   displayName: String,
