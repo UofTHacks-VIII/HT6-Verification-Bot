@@ -36,6 +36,8 @@ const getRoleID = (roleName) => {
   return roles[roleName]
 };
 
+const isAdmin = (message) => message.member && message.member.roles.cache.some(r => r.id === process.env.ADMIN_ROLE_ID)
+
 const respond = (message, reply) => {
   // if message was sent in the bot testing channel, don't delete the command message and reply in the channel
   if (message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID) {
@@ -59,7 +61,7 @@ bot.on('ready', () => {
   });
 });
 
-bot.on('message', message => {
+bot.on('message', async message => {
   // Don't respond to yourself! (That's sad)
   if (message.author.id === bot.user.id) {
     return;
@@ -67,6 +69,37 @@ bot.on('message', message => {
 
   if (message.content.startsWith('!roles') && isAdmin(message)) {
     return respond(message, JSON.stringify(roles, null, 4));
+  } else if (message.content.startsWith('!stats') && isAdmin(message)) {
+    const numTotal = await DiscordEntry.countDocuments({});
+    const numJoined = await DiscordEntry.countDocuments({ discordId: { $ne: null } });
+
+    const roleNames = Object.keys(roles);
+    let roleBreakdown = {};
+
+    for (let r of roleNames) {
+      const numTotalRole = await DiscordEntry.countDocuments({roles: { $in: r }});
+      const numJoinedRole = await DiscordEntry.countDocuments({ discordId: { $ne: null }, roles: { $in: r } });
+
+      roleBreakdown[r] = {
+        'numTotal': numTotalRole,
+        'numJoined': numJoinedRole,
+        'numRemaining': numTotalRole - numJoinedRole
+      }
+    }
+
+    let stats = {
+      'numTotal': numTotal,
+      'numJoined': numJoined,
+      'numRemaining': numTotal - numJoined,
+      'roleBreakdown': roleBreakdown
+    };
+
+    return respond(message, JSON.stringify(stats, null, 4));
+  } else if (message.content.startsWith('!adminhelp') && isAdmin(message)) {
+    return respond(message, 'Admin help:\n'+
+    '!adminhelp - this, duh\n' +
+    '!roles - list of roles\n' +
+    '!stats - statistics');
   } else if (message.content.startsWith('!verify')) {
     if (message.channel.type !== "text") {
       return message.author.send(
@@ -163,8 +196,7 @@ bot.on('message', message => {
         +
         `For any questions or concerns, message a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}.\n\n`);
   } else if (message.channel.id === process.env.VERIFY_CHANNEL_ID
-      && !message.member.roles.cache.some(
-          r => r.id === process.env.ADMIN_ROLE_ID)) {
+      && !isAdmin(message)) {
     return respond(message, 'That command is invalid! Run `!help` for verification instructions. Please contact a team member if you run into any problems!');
   }
 });
