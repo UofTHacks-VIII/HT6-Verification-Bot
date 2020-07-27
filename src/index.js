@@ -71,14 +71,14 @@ bot.on('message', async message => {
     return respond(message, JSON.stringify(roles, null, 4));
   } else if (message.content.startsWith('!stats') && isAdmin(message)) {
     const numTotal = await DiscordEntry.countDocuments({});
-    const numJoined = await DiscordEntry.countDocuments({ discordId: { $ne: null } });
+    const numJoined = await DiscordEntry.countDocuments({ discordID: { $ne: null } });
 
     const roleNames = Object.keys(roles);
     let roleBreakdown = {};
 
     for (let r of roleNames) {
       const numTotalRole = await DiscordEntry.countDocuments({roles: { $in: r }});
-      const numJoinedRole = await DiscordEntry.countDocuments({ discordId: { $ne: null }, roles: { $in: r } });
+      const numJoinedRole = await DiscordEntry.countDocuments({ discordID: { $ne: null }, roles: { $in: r } });
 
       roleBreakdown[r] = {
         'numTotal': numTotalRole,
