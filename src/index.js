@@ -144,7 +144,9 @@ bot.on('message', async message => {
 
           if (!user) {
             return respond(message,
-                "The email you specified either does not exist in our database or has already been associated with a Discord user. Please check the information you provided or contact a team member for assistance.");
+                "The email you specified either does not exist in our database or has already been associated with a Discord user.\n\n" +
+                "**IMPORTANT: IF YOU'RE A HACKER, YOU MUST RSVP BEFORE YOU CAN VERIFY YOUR ACCOUNT**\n\n" +
+                "Please check the information you provided or contact a team member for assistance.");
           } else {
 
             let rolePromises = [];
