@@ -40,7 +40,7 @@ const isAdmin = (message) => message.member && message.member.roles.cache.some(r
 
 const respond = (message, reply) => {
 
-  console.log(`[${new Date()}] ${reply} : ${email}, ${message.author.tag}`);
+  console.log(`[${new Date()}] ${reply}`);
 
   // if message was sent in the bot testing channel, don't delete the command message and reply in the channel
   if (message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID) {
