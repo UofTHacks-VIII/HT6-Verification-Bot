@@ -39,6 +39,9 @@ const getRoleID = (roleName) => {
 const isAdmin = (message) => message.member && message.member.roles.cache.some(r => r.id === process.env.ADMIN_ROLE_ID)
 
 const respond = (message, reply) => {
+
+  console.log(`[${new Date()}] ${reply} : ${email}, ${message.author.tag}`);
+
   // if message was sent in the bot testing channel, don't delete the command message and reply in the channel
   if (message.channel.id !== process.env.BOT_TESTING_CHANNEL_ID) {
     // public channel, delete the command message and reply in private message
