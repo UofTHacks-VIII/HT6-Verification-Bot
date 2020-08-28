@@ -36,7 +36,7 @@ const getRoleID = (roleName) => {
   return roles[roleName]
 };
 
-const isAdmin = (message) => message.member && message.member.roles.cache.some(r => r.id === process.env.ADMIN_ROLE_ID)
+const isAdmin = (message) => message.member && message.member.roles.cache.some(r => r.id === process.env.EXEC_ROLE_ID || r.id === process.env.VP_ROLE_ID)
 
 const respond = (message, reply) => {
 
