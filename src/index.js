@@ -155,7 +155,7 @@ bot.on('message', async message => {
             let rolePromises = [];
 
             user.roles.forEach((role) => {
-              rolePromises.push(message.member.roles.add(getRoleID(role)));
+              rolePromises.push(message.member.roles.add(getRoleID(role.toLowerCase())));
             });
 
             Promise.all(rolePromises)
