@@ -13,7 +13,7 @@ valid_roles = [
   "sponsor"
 ]
 
-with open('amentors.csv', 'r') as file:
+with open('ooops_round.csv', 'r') as file:
   reader = csv.reader(file)
 
   for row in reader:

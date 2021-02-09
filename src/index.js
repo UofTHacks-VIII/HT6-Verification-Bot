@@ -148,6 +148,7 @@ bot.on('message', async message => {
           if (!user) {
             return respond(message,
                 "The email you specified either does not exist in our database or has already been associated with a Discord user.\n\n" +
+                "**IMPORTANT: If you're a hacker, you can only verify before the RSVP deadline stated in your invitation**\n\n"+
                 "Please check the information you provided or contact a team member for assistance.");
           } else {
 
