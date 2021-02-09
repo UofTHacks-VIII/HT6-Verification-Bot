@@ -4,12 +4,16 @@ import json
 data = []
 
 valid_roles = [
-  'attendee',
-  'verified',
-  'instructor'
+"verified",
+  "hacker",
+  "judge",
+  "mentor",
+  "workshop-host",
+  "recruiter",
+  "sponsor"
 ]
 
-with open('deets.csv', 'r') as file:
+with open('amentors.csv', 'r') as file:
   reader = csv.reader(file)
 
   for row in reader:
@@ -34,8 +38,8 @@ with open('deets.csv', 'r') as file:
       display_name = name.strip()
 
     data.append({
-      'displayName': display_name,
-      'email': email,
+      'displayName': display_name.strip(),
+      'email': email.strip(),
       'roles': formatted_roles
     })
 
