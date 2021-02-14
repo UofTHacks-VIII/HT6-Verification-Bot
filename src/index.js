@@ -76,6 +76,7 @@ bot.on('message', async message => {
   } else if (message.content.startsWith('!stats') && isAdmin(message)) {
     const numTotal = await DiscordEntry.countDocuments({});
     const numJoined = await DiscordEntry.countDocuments({ discordID: { $ne: null } });
+    const numExpired = await DiscordEntry.countDocuments({ expires: { $lt: new Date().getTime() } });
 
     const roleNames = Object.keys(roles);
     let roleBreakdown = {};
@@ -83,19 +84,22 @@ bot.on('message', async message => {
     for (let r of roleNames) {
       const numTotalRole = await DiscordEntry.countDocuments({roles: { $in: r }});
       const numJoinedRole = await DiscordEntry.countDocuments({ discordID: { $ne: null }, roles: { $in: r } });
+      const numExpiredRole = await DiscordEntry.countDocuments({ roles: { $in: r }, expires: { $lt: new Date().getTime() } });
 
       roleBreakdown[r] = {
         'numTotal': numTotalRole,
         'numJoined': numJoinedRole,
-        'numRemaining': numTotalRole - numJoinedRole
+        'numRemainingNotExpired': numTotalRole - numJoinedRole - numExpiredRole,
+        'numRemainingExpired': numExpiredRole
       }
     }
 
     let stats = {
       'numTotal': numTotal,
       'numJoined': numJoined,
-      'numRemaining': numTotal - numJoined,
-      'roleBreakdown': roleBreakdown
+      'numRemainingNotExpired': numTotal - numJoined - numExpired,
+      'numRemainingExpired': numExpired,
+      'roleBreakdown': roleBreakdown,
     };
 
     return respond(message, JSON.stringify(stats, null, 4));
