@@ -24,7 +24,8 @@ const discordSchema = new mongoose.Schema({
   discordTag: String,
   displayName: String,
   roles: [String],
-  timeOfCheckin: Number
+  timeOfCheckin: Number,
+  expires: Number
 });
 
 const discords = mongoose.model('discords', discordSchema);

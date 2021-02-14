@@ -20,7 +20,8 @@ with open('ooops_round.csv', 'r') as file:
     company = row[0].strip()
     name = row[1].strip()
     email = row[2].lower()
-    roles = row[3:]
+    expiry = int(row[3].strip())
+    roles = row[4:]
 
     formatted_roles = []
 
@@ -40,7 +41,8 @@ with open('ooops_round.csv', 'r') as file:
     data.append({
       'displayName': display_name.strip(),
       'email': email.strip(),
-      'roles': formatted_roles
+      'roles': formatted_roles,
+      'expires': expiry
     })
 
 print(data)
