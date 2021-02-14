@@ -155,11 +155,13 @@ bot.on('message', async message => {
             if (user.expires) {
               try {
                 let expiryDate = new Date(user.expires);
+                let systemTime = new Date();
 
-                if (expiryDate < new Date()) {
+                if (expiryDate < systemTime) {
                   return respond(message,
                       `Sorry, your invitation expired on ${expiryDate.toString()}. If you believe this is an error, please contact a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}\n\n` +
-                      "**IMPORTANT: If you're a hacker, you can only verify before the RSVP deadline stated in your invitation**");
+                      "**IMPORTANT: If you're a hacker, you can only verify before the RSVP deadline stated in your invitation**\n\n" +
+                      `System time is: ${systemTime}`);
                 }
               } catch (e) {
                 console.log(e);
