@@ -17,7 +17,8 @@ const discordSchema = new mongoose.Schema({
   discordTag: String,
   displayName: String,
   roles: [String],
-  timeOfCheckin: Number
+  timeOfCheckin: Number,
+  expires: Number
 });
 
 const DiscordEntry = mongoose.model('discord', discordSchema);
@@ -148,9 +149,22 @@ bot.on('message', async message => {
           if (!user) {
             return respond(message,
                 "The email you specified either does not exist in our database or has already been associated with a Discord user.\n\n" +
-                "**IMPORTANT: If you're a hacker, you can only verify before the RSVP deadline stated in your invitation**\n\n"+
                 "Please check the information you provided or contact a team member for assistance.");
           } else {
+
+            if (user.expires) {
+              try {
+                let expiryDate = new Date(user.expires);
+
+                if (expiryDate < new Date()) {
+                  return respond(message,
+                      `Sorry, your invitation expired on ${expiryDate.toString()}. If you believe this is an error, please contact a member of the ${process.env.EVENT_NAME} team or shoot us an email at ${process.env.CONTACT_EMAIL}\n\n` +
+                      "**IMPORTANT: If you're a hacker, you can only verify before the RSVP deadline stated in your invitation**");
+                }
+              } catch (e) {
+                console.log(e);
+              }
+            }
 
             let rolePromises = [];
 
