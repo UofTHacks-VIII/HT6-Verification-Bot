@@ -84,7 +84,7 @@ bot.on('message', async message => {
     for (let r of roleNames) {
       const numTotalRole = await DiscordEntry.countDocuments({roles: { $in: r }});
       const numJoinedRole = await DiscordEntry.countDocuments({ discordID: { $ne: null }, roles: { $in: r } });
-      const numExpiredRole = await DiscordEntry.countDocuments({ roles: { $in: r }, expires: { $lt: new Date().getTime() } });
+      const numExpiredRole = await DiscordEntry.countDocuments({ discordID: { $ne: null }, roles: { $in: r }, expires: { $lt: new Date().getTime() } });
 
       roleBreakdown[r] = {
         'numTotal': numTotalRole,
