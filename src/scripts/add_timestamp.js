@@ -31,7 +31,8 @@ const discordSchema = new mongoose.Schema({
 const discords = mongoose.model('discords', discordSchema);
 
 discords.updateMany({
-  roles: { $in: 'hacker' }
+  roles: { $in: 'hacker' },
+  expires: null
 }, {
   expires: 1613365199000
 }, (err, user) => {
