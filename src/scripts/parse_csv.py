@@ -19,7 +19,7 @@ with open('sponsor_1.csv', 'r') as file:
   for row in reader:
     company = row[0].strip()
     name = row[1].strip()
-    email = row[2].lower()
+    email = row[2].strip().lower()
     expiry = int(row[3].strip()) if row[3].strip() else None
     roles = row[4:]
 
@@ -36,7 +36,7 @@ with open('sponsor_1.csv', 'r') as file:
           break
 
     if company.strip():
-      display_name = '%s (%s)' % (name.split()[0], company)
+      display_name = '%s (%s)' % (name, company)
     else:
       display_name = name.strip()
 
