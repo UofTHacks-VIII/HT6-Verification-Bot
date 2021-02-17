@@ -10,7 +10,8 @@ valid_roles = [
   "mentor",
   "workshop-host",
   "recruiter",
-  "sponsor"
+  "sponsor",
+  "sponsor-mentor"
 ]
 
 with open('sponsor_1.csv', 'r') as file:
