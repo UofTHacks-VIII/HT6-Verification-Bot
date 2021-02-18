@@ -30,15 +30,23 @@ const discordSchema = new mongoose.Schema({
 
 const discords = mongoose.model('discords', discordSchema);
 
-discords.updateMany({
-  displayName:/.*Telus*./,
-  expires: null
-}, {
-  roles: [
-      "verified",
-      "sponsor-mentor",
-      "mentor"
-  ]
-}, (err, user) => {
-  console.log(err, user);
+discords.find({
+  displayName:/.*Telus*./
+}, (err, users) => {
+
+  for (let user of users) {
+    let name = user.displayName.split(' (Telus)')[0];
+
+
+    discords.updateOne({
+      _id: user._id
+    }, {
+      displayName: `${ name } (TELUS)`
+    }, (err, wtf) => {
+      console.log(err, wtf);
+    });
+
+    console.log(user.displayName, name);
+  }
+
 });
